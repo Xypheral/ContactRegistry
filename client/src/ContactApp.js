@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import ContactRegistry from './contracts/ContactRegistry.json'; // Import the contract artifact
-import getWeb3 from './getWeb3'; // This is a utility to get the web3 instance
-import './ContactApp.css'; // Import your CSS file
+import ContactRegistry from './contracts/ContactRegistry.json';
+import getWeb3 from './getWeb3';
+import './ContactApp.css';
 
 class ContactApp extends Component {
   state = {
@@ -11,8 +11,6 @@ class ContactApp extends Component {
     name: '',
     number: '',
     contacts: [],
-    searchName: '', // Added state for searchName
-    filteredContacts: [], // Added state to store filtered contacts
     contactId: '', // Added state to input the contact ID
     contactDetails: null, // Added state to store contact details
   };
@@ -61,8 +59,6 @@ class ContactApp extends Component {
     console.log('Contacts:', contacts);
 
     this.setState({ contacts });
-    // Set filteredContacts initially to all contacts
-    this.setState({ filteredContacts: contacts });
   };
 
   handleInputChange = (event) => {
@@ -84,18 +80,6 @@ class ContactApp extends Component {
     this.setState({ name: '', number: '' });
   };
 
-  handleSearch = () => {
-    const { contacts, searchName } = this.state;
-  
-    // Filter contacts based on the searchName
-    const filteredContacts = contacts.filter((contact) =>
-      contact.name &&
-      contact.name.toLowerCase().includes(searchName.toLowerCase())
-    );
-  
-    this.setState({ filteredContacts });
-  };
-
   handleViewContact = async () => {
     const { contract, contactId } = this.state;
 
@@ -108,9 +92,9 @@ class ContactApp extends Component {
       this.setState({ contactDetails: null });
     }
   };
-  
+
   render() {
-    const { name, number, filteredContacts, searchName, contactId, contactDetails } = this.state;
+    const { name, number, contactId, contactDetails } = this.state;
 
     return (
       <div className="contact-app">
@@ -158,7 +142,6 @@ class ContactApp extends Component {
             </div>
           )}
         </div>
-
       </div>
     );
   }
