@@ -9021,12 +9021,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xE22F6c4aFB04DEe234957A86dE3d5dB0C65506CD",
-      "transactionHash": "0xba0204094785ac64423214aca59c256c289c67cfa4eae6916ff000defe359c4b"
+      "address": "0xc08c8471228C35fcfB890743ac45518c3093CDd1",
+      "transactionHash": "0xc3e7c52dac13a917fe7f22ddb1252ac82a0ac96ce8891291a28f607859bea577"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2023-09-25T00:32:03.711Z",
+  "updatedAt": "2023-09-27T07:33:54.171Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
