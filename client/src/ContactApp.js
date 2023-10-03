@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import ContactRegistry from './contracts/ContactRegistry.json';
 import getWeb3 from './getWeb3';
 import './ContactApp.css';
+import { QrReader } from 'react-qr-reader';
+import qrcode from 'qrcode'; // Import qrcode library
 
 class ContactApp extends Component {
   state = {
@@ -10,20 +12,17 @@ class ContactApp extends Component {
     contract: null,
     name: '',
     number: '',
-    contacts: [],
-    contactId: '', // Added state to input the contact ID
-    contactDetails: null, // Added state to store contact details
+    contactId: '',
+    contactDetails: null,
+    qrCodeDataURL: null,
+    qrScannerEnabled: false,
+    scannedQRData: null,
   };
 
   componentDidMount = async () => {
     try {
-      // Get the web3 instance
       const web3 = await getWeb3();
-
-      // Get the user's accounts
       const accounts = await web3.eth.getAccounts();
-
-      // Get the contract instance
       const networkId = await web3.eth.net.getId();
       const deployedNetwork = ContactRegistry.networks[networkId];
       const contract = new web3.eth.Contract(
@@ -32,33 +31,9 @@ class ContactApp extends Component {
       );
 
       this.setState({ web3, accounts, contract });
-
-      // Load the user's contacts
-      this.loadContacts();
     } catch (error) {
       console.error('Error initializing web3:', error);
     }
-  };
-
-  loadContacts = async () => {
-    const { contract } = this.state;
-    let contacts; // Declare the 'contacts' variable here
-
-    // Get the total number of contacts
-    const contactCount = await contract.methods.contactCount().call();
-    console.log('Total contact count:', contactCount);
-
-    // Load each contact by ID
-    contacts = [];
-    for (let i = 1; i <= contactCount; i++) {
-      const contact = await contract.methods.viewContact(i).call();
-      console.log('Loaded contact:', contact);
-      contacts.push(contact);
-    }
-
-    console.log('Contacts:', contacts);
-
-    this.setState({ contacts });
   };
 
   handleInputChange = (event) => {
@@ -68,33 +43,73 @@ class ContactApp extends Component {
   handleCreateContact = async () => {
     const { accounts, contract, name, number } = this.state;
 
-    // Create a new contact
-    await contract.methods.registerContact(name, number).send({ from: accounts[0] });
+    try {
+      await contract.methods.registerContact(name, number).send({ from: accounts[0] });
 
-    console.log('Contact created:', name, number);
+      console.log('Contact created:', name, number);
 
-    // Reload contacts
-    this.loadContacts();
+      const contactCount = await contract.methods.contactCount().call();
+      const contactId = contactCount.toString();
 
-    // Clear the input fields
-    this.setState({ name: '', number: '' });
+      // Generate a QR code as a Data URL using qrcode library
+      const qrCodeDataURL = await qrcode.toDataURL(contactId);
+
+      this.setState({ qrCodeDataURL, name: '', number: '', contactDetails: null });
+    } catch (error) {
+      console.error('Error creating contact:', error);
+    }
   };
-
+  
   handleViewContact = async () => {
     const { contract, contactId } = this.state;
 
     try {
       const contact = await contract.methods.viewContact(contactId).call();
       console.log('Contact details:', contact);
-      this.setState({ contactDetails: contact });
+      this.setState({ contactDetails: contact, qrCodeDataURL: null });
     } catch (error) {
       console.error('Error fetching contact:', error);
       this.setState({ contactDetails: null });
     }
   };
 
+  handleDownloadQRCode = () => {
+    const { qrCodeDataURL } = this.state;
+
+    if (qrCodeDataURL) {
+      const a = document.createElement('a');
+      a.href = qrCodeDataURL;
+      a.download = 'contact_qr_code.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+  toggleQRScanner = () => {
+    this.setState((prevState) => ({
+      qrScannerEnabled: !prevState.qrScannerEnabled,
+      scannedQRData: null,
+    }));
+  };
+
+  handleScan = (data) => {
+    if (data) {
+      // Extract the text from the scanned data
+      const scannedText = data.text;
+  
+      // Update the contactId state with the scanned text
+      this.setState({ contactId: scannedText }, () => {
+        // After updating the state, call the handleViewContact method
+        this.handleViewContact();
+      });
+    }
+  };
+  
+  
+
   render() {
-    const { name, number, contactId, contactDetails } = this.state;
+    const { name, number, contactId, contactDetails, qrCodeDataURL, qrScannerEnabled, scannedQRData } = this.state;
 
     return (
       <div className="contact-app">
@@ -117,8 +132,20 @@ class ContactApp extends Component {
               onChange={this.handleInputChange}
               placeholder="Number"
             />
-            <button onClick={this.handleCreateContact}>Create</button>
+            <button className="contact-button" onClick={this.handleCreateContact}>
+              Create
+            </button>
           </div>
+          {qrCodeDataURL && (
+            <div className="contact-details">
+              <h3>QR Code</h3>
+              <img src={qrCodeDataURL} alt="QR Code" />
+              <br></br>
+              <button className="contact-button" onClick={this.handleDownloadQRCode}>
+                Download QR Code
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="section">
@@ -131,7 +158,9 @@ class ContactApp extends Component {
               onChange={this.handleInputChange}
               placeholder="Enter Contact ID"
             />
-            <button onClick={this.handleViewContact}>View Contact</button>
+            <button className="contact-button" onClick={this.handleViewContact}>
+              View Contact
+            </button>
           </div>
           {contactDetails && (
             <div className="contact-details">
@@ -139,6 +168,32 @@ class ContactApp extends Component {
               <p>ID: {contactDetails[0]}</p>
               <p>Name: {contactDetails[1]}</p>
               <p>Number: {contactDetails[2]}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="section">
+          <h2>QR Scanner</h2>
+          <div className="form">
+            <button className="contact-button" onClick={this.toggleQRScanner}>
+              {qrScannerEnabled ? 'Disable QR Scanner' : 'Enable QR Scanner'}
+            </button>
+          </div>
+          {qrScannerEnabled && (
+            <div className="qr-scanner">
+              <QrReader
+                delay={300}
+                onScan={this.handleScan}
+                onResult={this.handleScan} // Add this line
+                onError={(error) => console.error('QR Scanner Error:', error)}
+                style={{ width: '100%' }}
+              />
+            </div>
+          )}
+          {scannedQRData && (
+            <div className="scanned-data">
+              <h3>Scanned QR Code Data</h3>
+              <p>{scannedQRData}</p>
             </div>
           )}
         </div>

@@ -7,8 +7,11 @@
     "start": "webpack serve"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "qrcode": "^1.5.3",
+    "qrcode.react": "^3.1.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-qr-reader": "^3.0.0-beta-1",
     "web3": "^1.8.2"
   },
   "devDependencies": {
