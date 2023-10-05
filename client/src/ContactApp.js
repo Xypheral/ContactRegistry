@@ -109,11 +109,19 @@ class ContactApp extends Component {
   
 
   render() {
-    const { name, number, contactId, contactDetails, qrCodeDataURL, qrScannerEnabled, scannedQRData } = this.state;
+    const { name, number, contactId, contactDetails, qrCodeDataURL, qrScannerEnabled, scannedQRData, accounts } = this.state;
 
     return (
       <div className="contact-app">
         <h1>Contact Registry</h1>
+
+        <div className="connected-account">
+          {accounts && accounts.length > 0 ? (
+            <p className='account-align'>Connected Account: {accounts[0]}</p>
+          ) : (
+            <p>No account connected</p>
+          )}
+        </div>
 
         <div className="section">
           <h2>Create Contact</h2>

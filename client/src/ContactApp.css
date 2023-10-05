@@ -60,4 +60,14 @@
   background-color: #0056b3;
 }
   
+.connected-account {
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  padding: 5px;
+  background-color: #f9f9f9;
+}
 
+.account-align {
+  color: red;
+  margin-left: 20px;
+}
